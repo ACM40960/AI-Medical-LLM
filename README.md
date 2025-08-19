@@ -2,7 +2,7 @@
 <div align="center">
   <img src="static/image/logo.png" alt="Project Logo" width="150" height="150" />
   <h1>MediBot — Retrieval-Augmented Generation (RAG) for Trusted Medical Answers</h1>
-  <p><em>Flask • LangChain • Pinecone • HuggingFace MiniLM • Groq (Llama 3) • (Optional) SerpAPI fallback • <strong>Deployed on AWS</strong></em></p>
+  <p><em>Flask • LangChain • Pinecone • HuggingFace Embeddings • Groq (Llama 3) • SerpAPI fallback • <strong>Deployed on AWS EC2</strong></em></p>
 </div>
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
@@ -18,7 +18,7 @@
 
 > Live app: **[Open MediBot (Live)](http://16.16.207.95:8501/)**
 
-A retrieval-augmented medical Q&A chatbot. It embeds expert-authored medical documents, stores them in a Pinecone vector index, retrieves the most relevant chunks for a user query, and generates grounded answers with a Groq-hosted LLM via LangChain. A minimal Flask app provides a real-time chat UI and a simple API. If no trustworthy match is found, an optional SerpAPI fallback performs a web search and clearly labels the source.
+A retrieval-augmented medical Q&A chatbot. It embeds expert-authored medical documents, stores them in a Pinecone vector index, retrieves the most relevant chunks for a user query, and generates grounded answers with a Groq-hosted LLM via LangChain. A minimal Flask app provides a real-time chat UI and a simple API. If no trustworthy match is found, SerpAPI fallback performs a web search and clearly labels the source.
 
 ---
 
@@ -58,7 +58,7 @@ A retrieval-augmented medical Q&A chatbot. It embeds expert-authored medical doc
 
 ## Abstract
 
-MediBot implements Retrieval-Augmented Generation (RAG) for medical queries. Documents are embedded using a HuggingFace MiniLM model, stored in Pinecone for fast similarity search, and fed to a Groq LLM (Llama 3) via LangChain to generate concise, source-grounded answers. A Flask web interface enables real-time interaction. When the knowledge base can’t confidently answer, a SerpAPI fallback performs a trusted web search and clearly labels web-sourced responses. The system is **deployed on AWS** and is live at **[Open MediBot (Live)](http://16.16.207.95:8501/)** (update this), enabling public access in a production setting.
+MediBot implements Retrieval-Augmented Generation (RAG) for medical queries. Documents are embedded using a HuggingFace MiniLM model, stored in Pinecone for fast cosine similarity search, and fed to a Groq LLM (Llama 3) via LangChain to generate concise, source-grounded answers. A Flask web interface enables real-time interaction. When the knowledge base can’t confidently answer, a SerpAPI fallback performs a trusted web search and clearly labels web-sourced responses. The system is **deployed on AWS EC2** and is live at **[Open MediBot (Live)](http://16.16.207.95:8501/)** , enabling public access in a production setting.
 
 ## Project Description
 
@@ -69,10 +69,10 @@ Medical information is vast and context-dependent. Rather than relying on an LLM
 - **Flask UI:** Lightweight web interface for chatting with the model.
 - **HuggingFace Embeddings:** `sentence-transformers/all-MiniLM-L6-v2` (384-dim) to represent documents/queries.
 - **Pinecone Vector Store:** Stores embeddings in index **`medicalbot`**; cosine similarity search.
-- **Groq LLM via LangChain:** ChatGroq with Llama 3 / Mixtral to synthesise answers over retrieved context.
+- **Groq LLM via LangChain:** ChatGroq with Llama 3 to synthesise answers over retrieved context.
 - **LangChain RAG Chain:** Runnable graph for retrieval + generation with prompt templates and history.
-- **(Optional) SerpAPI Fallback:** Web search with explicit “External source (web)” labelling in the UI.
-- **AWS Deployment:** EC2-hosted Flask app behind Nginx (or directly via Docker), environment-driven config.
+- **SerpAPI Fallback:** Web search with explicit “External source (web)” labelling in the UI.
+- **AWS Deployment:** EC2-hosted Flask app via Docker, environment-driven config.
 
 ### System Goals
 
@@ -85,11 +85,10 @@ Medical information is vast and context-dependent. Rather than relying on an LLM
 
 - 🔎 Similarity search over embedded **expert medical PDFs**
 - 🧠 RAG answer generation with **Groq** LLMs
-- 🌐 **SerpAPI** fallback with explicit source labelling (optional)
+- 🌐 **SerpAPI** fallback with explicit source labelling
 - 🖥️ Flask chat UI and JSON API
-- 🧾 Source snippets + page numbers (when available)
+- 🧾 Source snippets + page numbers
 - 🔐 `.env`-based configuration for API keys
-- ☁️ **Live on AWS** with public access (link above)
 - ⚙️ Modular code to swap models, indexes, and prompts
 
 ## Project Structure
@@ -101,7 +100,7 @@ ai-medical-chatbot/
 │   ├── __init__.py             
 │   ├── helper.py               # Data Split to chunks + Embeddings (HuggingFace) + GoogleSearch (Fallback)
 │   ├── prompt.py               # Prompt for LLM Model
-│   ├── fallback.py             # (Optional) SerpAPI fallback logic
+│   ├── fallback.py             # SerpAPI fallback logic
 │   ├── config.py               # Settings and constants
 │   └── utils.py                # Helpers (formatting, safety, etc.)
 ├── templates/
@@ -124,7 +123,7 @@ ai-medical-chatbot/
 - Python 3.10+
 - Pinecone account + API key
 - Groq API key
-- (Optional) SerpAPI key for fallback
+- SerpAPI key for fallback
 - A curated set of **expert-authored medical PDFs** to embed
 - **AWS EC2** instance (Ubuntu recommended) with security group allowing HTTP/HTTPS
 
@@ -157,7 +156,7 @@ ai-medical-chatbot/
   2. Build & run:
      ```bash
      docker build -t medibot:latest .
-     docker run -d --name medibot -p 8080:8080 --env-file .env medibot:latest
+     docker run -d --name medibot -p 8501:8501 --env-file .env medibot:latest
      ```
 
 - **CI/CD**
@@ -184,7 +183,7 @@ SERPAPI_API_KEY=...
 
 # App
 FLASK_HOST=0.0.0.0
-FLASK_PORT=8080
+FLASK_PORT=8501
 TOP_K=3
 FLASK_ENV=production        # set to production on AWS
 ```
@@ -287,9 +286,9 @@ Representative timings from our tests (hardware/network-dependent):
 
 ## Deployment
 
-- **Cloud:** AWS (EC2; works with Docker or Gunicorn + Nginx).  
+- **Cloud:** AWS (EC2; works with Docker).  
 - **Status:** Live at **[Open MediBot (Live)](http://16.16.207.95:8501/)**   
-- **Security:** Use HTTPS (Nginx + Certbot), restrict inbound ports, rotate API keys.  
+- **Security:** Use HTTP, restrict inbound ports, rotate API keys.  
 - **CI/CD:** GitHub Actions workflow to build Docker image and deploy on push to `main`.  
 - **Scaling:** Vertical (bigger EC2) or horizontal (behind a load balancer + multiple containers).
 
