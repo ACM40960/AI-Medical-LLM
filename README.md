@@ -18,7 +18,7 @@
 
 > Live app: **[Open MediBot (Live)](http://16.16.207.95:8501/)**
 
-A retrieval-augmented medical Q&A chatbot. It embeds expert-authored medical documents, stores them in a Pinecone vector index, retrieves the most relevant chunks for a user query, and generates grounded answers with a Groq-hosted LLM via LangChain. A minimal Flask app provides a real-time chat UI and a simple API. If no trustworthy match is found, SerpAPI fallback performs a web search and clearly labels the source.
+A retrieval-augmented medical Q&A chatbot. It embeds expert-authored medical documents, stores them in a Pinecone vector index, retrieves the most relevant chunks for a user query, and generates grounded answers with a Groq-hosted LLM via LangChain. A minimal Flask app provides a real-time chat UI and a simple API. If no trustworthy match is found, SerpAPI fallback performs a web search and provides an answer.
 
 ---
 
@@ -99,10 +99,7 @@ ai-medical-chatbot/
 ├── src/
 │   ├── __init__.py             
 │   ├── helper.py               # Data Split to chunks + Embeddings (HuggingFace) + GoogleSearch (Fallback)
-│   ├── prompt.py               # Prompt for LLM Model
-│   ├── fallback.py             # SerpAPI fallback logic
-│   ├── config.py               # Settings and constants
-│   └── utils.py                # Helpers (formatting, safety, etc.)
+│   └── prompt.py               # Prompt for LLM Model
 ├── templates/
 │   └── chat.html               # Chat UI (labels whether answer is KB or Web)
 ├── static/
@@ -164,7 +161,7 @@ ai-medical-chatbot/
 
 ## Configuration
 
-Create a `.env` file (or copy from `.env.example`) and set:
+Create a `.env` file and set:
 
 ```dotenv
 # Pinecone
@@ -176,7 +173,7 @@ EMBEDDINGS_MODEL=sentence-transformers/all-MiniLM-L6-v2
 
 # Groq
 GROQ_API_KEY=...
-GROQ_MODEL=llama3-70b-8192  # or mixtral-8x7b, etc.
+GROQ_MODEL=llama3-70b-8192  
 
 # Optional fallback (SerpAPI)
 SERPAPI_API_KEY=...
@@ -230,7 +227,7 @@ curl -X POST http://16.16.207.95:8501//get \
 ## RAG Pipeline
 
 **Offline Indexing**
-1. Load PDFs (e.g., via LangChain `PyPDFLoader`).
+1. Load PDFs (via LangChain `PyPDFLoader`).
 2. **Chunk & preprocess:** 500-token chunks with 50-token overlap.
 3. **Embed chunks** with MiniLM and upsert vectors into Pinecone.
 
@@ -262,8 +259,6 @@ Representative timings from our tests (hardware/network-dependent):
 - **Retrieval time:** ~**20 ms**
 - **LLM inference time:** ~**3 ms**
 
-> Tip: instrument LangChain callbacks to track median latency and error rate over time.
-
 ## Evaluation & Results
 
 - **Test Suite:** >**50** medical questions drawn from textbook chapters.
@@ -290,7 +285,6 @@ Representative timings from our tests (hardware/network-dependent):
 - **Status:** Live at **[Open MediBot (Live)](http://16.16.207.95:8501/)**   
 - **Security:** Use HTTP, restrict inbound ports, rotate API keys.  
 - **CI/CD:** GitHub Actions workflow to build Docker image and deploy on push to `main`.  
-- **Scaling:** Vertical (bigger EC2) or horizontal (behind a load balancer + multiple containers).
 
 ## Demo & Poster
 
