@@ -1,115 +1,133 @@
-name: workflow
+# ---------------------------
+# Workflow name
+# ---------------------------
+name: workflow   # This is the name of the GitHub Actions workflow. It will appear in the "Actions" tab of GitHub.
 
-on:
-  push:
+# ---------------------------
+# Event Triggers
+# ---------------------------
+on:             # Defines when this workflow should run
+  push:         # Run workflow when code is pushed
     branches:
-      - main
+      - main    # Only trigger when pushing to the 'main' branch
     paths-ignore:
-      - "README.md"
+      - "README.md"   # Ignore pushes that only modify the README.md file (no need to build/deploy for that)
 
-permissions:
-  id-token: write
-  contents: read
+# ---------------------------
+# Permissions
+# ---------------------------
+permissions:           # GitHub Actions permissions granted to this workflow
+  id-token: write      # Allows issuing OIDC tokens (needed for AWS auth, for example)
+  contents: read       # Allows the workflow to read repository contents
 
+# ---------------------------
+# JOB 1: Continuous Integration
+# ---------------------------
 jobs:
-  integration:
+  integration:                # First job: Continuous Integration
     name: Continuous Integration
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ubuntu-latest    # Job will run on the latest Ubuntu GitHub-hosted runner
+    steps:                    # List of steps in this job
+
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3   # Action to check out repository code
         with:
-          repository: Kmvucd/Medibot-demo
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
+          repository: Kmvucd/Medibot-demo  # Specifies the repo to check out
+          token: ${{ secrets.GITHUB_TOKEN }} # Auth token automatically provided by GitHub
+          ref: main                 # Check out the 'main' branch
 
       - name: Lint code
-        run: echo "Linting repository"
+        run: echo "Linting repository"   # Placeholder step to lint (static code checks).
+                                         # Currently just echoes a message.
 
       - name: Run unit tests
-        run: echo "Running unit tests"
-      
+        run: echo "Running unit tests"   # Placeholder step for unit testing.
+                                         # Currently just echoes a message.
 
-
-
+# ---------------------------
+# JOB 2: Push Docker image to Docker Hub
+# ---------------------------
   push_to_registry:
     name: Push Docker image to Docker hub
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest    # Run on Ubuntu GitHub-hosted runner
     steps:
+
       - name: Checkout out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3   # Checks out the repository code so Docker can build it
   
       - name: Setup Docker Build
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v2   # Sets up Docker Buildx (advanced builder for multi-platform builds)
 
       - name: Login to docker hub
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9  # Docker login action
         with:
-          username: ${{secrets.DOCKER_USERNAME}}
-          password: ${{secrets.DOCKER_PASSWORD}}
+          username: ${{secrets.DOCKER_USERNAME}}   # Docker Hub username stored as a secret
+          password: ${{secrets.DOCKER_PASSWORD}}   # Docker Hub password stored as a secret
 
       - name: Extract metadata (tags,labels) for docker
-        id: meta
+        id: meta   # ID so we can reference outputs later
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ secrets.REGISTRY }}/${{ secrets.IMAGE_NAME }}
+          images: ${{ secrets.REGISTRY }}/${{ secrets.IMAGE_NAME }}   # Defines the image name & repo
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2   # Builds and pushes Docker images
         with:
-          context: "{{defaultContext}}"
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          context: "{{defaultContext}}"     # Build context = repo root
+          push: true                        # Push image to Docker Hub
+          tags: ${{ steps.meta.outputs.tags }}   # Tags generated from metadata step
+          labels: ${{ steps.meta.outputs.labels }} # Labels for the Docker image
 
-
+# ---------------------------
+# JOB 3: Continuous Deployment to AWS
+# ---------------------------
   Continuous-Deployment:
-    needs: push_to_registry
-    runs-on: self-hosted
+    needs: push_to_registry    # This job will only run after "push_to_registry" completes successfully
+    runs-on: self-hosted       # Uses a self-hosted runner (your EC2 instance, not GitHub’s runner)
     steps:
+
       - name: Checkout
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v3   # Checkout repo code (not strictly necessary for deployment, but included)
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1   # GitHub AWS credentials action
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}     # AWS access key (secret)
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS secret key (secret)
+          aws-region: ${{ secrets.AWS_REGION }}   # Region to deploy into (secret)
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9   # Docker login
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKER_USERNAME }}   # Docker Hub username
+          password: ${{ secrets.DOCKER_PASSWORD }}   # Docker Hub password
 
       - name: Pull images
         run: |
           docker pull ${{ secrets.REGISTRY }}/${{ secrets.IMAGE_NAME }}:main
+          # Pulls the latest image tagged 'main' from Docker Hub
 
       - name: Remove existing container if it exists
         run: |
           docker rm -f stapp || true
+          # Removes container named 'stapp' if it exists. '|| true' ensures workflow won’t fail if container is absent.
+
       - name: Run Docker Image to serve users
         run: |
-          docker run -d \
-          -p 8501:8501 \
-          --name=stapp \
-          -e AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
-          -e AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
-          -e AWS_REGION='${{ secrets.AWS_REGION }}' \
-          -e PINECONE_API_KEY='${{ secrets.PINECONE_API_KEY }}' \
-          -e GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}' \
-          -e PINECONE_ENV='${{ secrets.PINECONE_ENV }}' \
-          -e LANGCHAIN_API_KEY='${{ secrets.LANGCHAIN_API_KEY }}' \
-          -e SERPAPI_API_KEY='${{ secrets.SERPAPI_API_KEY }}' \
-            ${{ secrets.REGISTRY }}/${{ secrets.IMAGE_NAME }}:main
+          docker run -d \                           # Run in detached mode
+          -p 8501:8501 \                            # Map host port 8501 to container port 8501
+          --name=stapp \                            # Container name = stapp
+          -e AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \   # Inject AWS access key into container
+          -e AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \ # Inject AWS secret
+          -e AWS_REGION='${{ secrets.AWS_REGION }}' \                  # Inject region
+          -e PINECONE_API_KEY='${{ secrets.PINECONE_API_KEY }}' \      # Inject Pinecone API key
+          -e GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}' \              # Inject Groq API key
+          -e PINECONE_ENV='${{ secrets.PINECONE_ENV }}' \              # Inject Pinecone env
+          -e LANGCHAIN_API_KEY='${{ secrets.LANGCHAIN_API_KEY }}' \    # Inject LangChain API key
+          -e SERPAPI_API_KEY='${{ secrets.SERPAPI_API_KEY }}' \        # Inject SerpAPI key
+            ${{ secrets.REGISTRY }}/${{ secrets.IMAGE_NAME }}:main     # Image to run (from Docker Hub)
 
       - name: Clean previous images and containers
         run: |
          docker system prune -f
-      
-
-
-
-    
+         # Cleans unused images, containers, and networks to free disk space
