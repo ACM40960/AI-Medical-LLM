@@ -329,7 +329,7 @@ Representative timings from our tests (hardware/network-dependent):
 ## Demo & Poster
 
 - **Live app:** [Open MediBot (Live)](http://16.16.207.95:8501/)  
-- Poster PDF: `docs/MediBot_Poster.pdf`.
+- Poster PDF: [MediBot_Poster.pdf](docs/MediBot_Poster.pdf)
 
 ## Future Work
 
@@ -352,7 +352,7 @@ Contributions are welcome! Please open an issue or submit a PR for bug fixes, fe
 
 ## License
 
-This project is licensed under the **MIT License**. See the `LICENSE` file.
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file.
 
 ## Authors & Course
 
