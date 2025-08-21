@@ -267,6 +267,46 @@ Representative timings from our tests (hardware/network-dependent):
 - **Error rate:** **0%**
 - **Hallucinations:** None observed in tests.
 
+### Observed Metrics
+
+<div align="center">
+  <img src="static/image/Trace_count.png" alt="Trace Count" width="600"/>
+</div>  
+
+**Trace Count:** Shows number of runs over time. Nearly all runs completed successfully (green), with very few errors (red), validating stability.  
+
+---
+
+<div align="center">
+  <img src="static/image/Trace_latency.png" alt="Trace Latency" width="600"/>
+</div>  
+
+**Trace Latency (P50 vs P99):**  
+- **P50 (median, blue):** Typical response latency was near real-time (sub-second).  
+- **P99 (purple):** Even at peak load, the slowest 1% of requests rarely exceeded **30s**, showing strong robustness.  
+
+---
+
+<div align="center">
+  <img src="static/image/LLM_count.png" alt="LLM Count" width="600"/>
+</div>  
+
+**LLM Count:** Indicates number of LLM calls. The system scales with spikes in usage while maintaining a near-zero error rate.  
+
+---
+
+<div align="center">
+  <img src="static/image/LLM_latency.png" alt="LLM Latency" width="600"/>
+</div>  
+
+**LLM Latency (P50 vs P99):**  
+- **Median (P50):** Most LLM calls returned in under **1s–2s**.  
+- **Tail (P99):** Occasional outliers (up to ~10s) were observed but remained rare.  
+
+---
+
+✅ **Interpretation:** MediBot consistently delivers **accurate, low-latency responses**, gracefully falls back when needed, and maintains high reliability (0% error rate). These metrics confirm its readiness for real-world deployment in a medical information support role.
+
 ## Safety & Compliance
 
 - **EU AI Act (2024):** Treated as a **high-risk** context; designed for transparency and safety.
