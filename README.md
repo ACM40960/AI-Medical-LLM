@@ -2,7 +2,7 @@
 <div align="center">
   <img src="static/image/logo.png" alt="Project Logo" width="150" height="150" />
   <h1>MediBot — Retrieval-Augmented Generation (RAG) for Trusted Medical Answers</h1>
-  <p><em>Flask • LangChain • Pinecone • HuggingFace Embeddings • Groq (Llama 3) • SerpAPI fallback • <strong>Deployed on AWS EC2</strong></em></p>
+  <p><em>Flask • LangChain • Pinecone • HuggingFace Embeddings • Groq (Llama 3) • SerpAPI fallback • Deployed on AWS EC2</em></p>
 </div>
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
