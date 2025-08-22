@@ -366,12 +366,12 @@ For questions or suggestions, please open an issue or contact: **netheeswarana@g
 
 ## References
 
-1. Lewis et al. (2020) — Retrieval-Augmented Generation  
-2. Singhal et al. (2023) — Med-PaLM  
+1. Lewis et al. (2020) - Retrieval-Augmented Generation  
+2. Singhal et al. (2023) - Med-PaLM  
 3. EU AI Act (2024)  
-4. Hippocrates (2023) — Ethical design in AI  
-5. Yang et al. (2024) — LLM eHealth Chatbots  
-6. Laranjo et al. (2020) — Chatbot design principles  
+4. Hippocrates (2023) - Ethical design in AI  
+5. Yang et al. (2024) - LLM eHealth Chatbots  
+6. Laranjo et al. (2020) - Chatbot design principles  
 7. LangChain Docs • Pinecone Docs • Groq API • SerpAPI Docs
 
 ## Credits
