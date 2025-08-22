@@ -206,7 +206,7 @@ python app.py
 **POST /get** (example)
 
 ```bash
-curl -X POST http://16.16.207.95:8501//get \
+curl -X POST http://16.16.207.95:8501/get \
   -H "Content-Type: application/json" \
   -d '{"query":"What are common symptoms of anemia?"}'
 ```
